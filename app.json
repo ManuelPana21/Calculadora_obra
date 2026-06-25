@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "calculadora-cielos",
+    "slug": "calculadora-cielos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/plan.png",
+    "scheme": "calculadoracielos",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/plan.png",
+        "monochromeImage": "./assets/images/plan.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/plan.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/plan.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

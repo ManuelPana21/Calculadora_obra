@@ -74,6 +74,18 @@ export default function EditorPlanosScreen() {
     }));
   };
 
+  const eliminarMedidaDeBloque = (bloqueId: string, medidaId: string) => {
+    setBloques(bloques.map(bloque => {
+      if (bloque.id === bloqueId) {
+        if (bloque.medidas.length > 2) {
+          const nuevasMedidas = bloque.medidas.filter(medida => medida.id !== medidaId);
+          return { ...bloque, medidas: nuevasMedidas };
+        }
+      }
+      return bloque;
+    }));
+  };
+
   const procesarCalculo = () => {
     let tieneError = false;
     let mensajeError = "";
@@ -108,7 +120,10 @@ export default function EditorPlanosScreen() {
       pathname: '/resultados',
       params: { 
         bloques: bloquesString,
-        planoOriginal: params.planoEditando || null 
+        planoOriginal: params.planoEditando || null,
+        proyectoId: params.proyectoId, 
+        calculoId: params.calculoId,
+        nombreProyecto: params.nombreProyecto || (params.planoEditando ? JSON.parse(params.planoEditando as string).nombre : '')
       }
     });
   };
@@ -135,12 +150,21 @@ export default function EditorPlanosScreen() {
                 <Text style={styles.inputLabel}>Lado {index + 1}:</Text>
                 
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, index >= 2 && { marginRight: 8 }]}
                   keyboardType="numeric"
                   placeholder="0.00"
                   value={medida.valor}
                   onChangeText={(texto) => actualizarMedida(bloque.id, medida.id, texto)}
                 />
+
+                {index >= 2 && (
+                  <TouchableOpacity 
+                    style={styles.btnBorrarLado} 
+                    onPress={() => eliminarMedidaDeBloque(bloque.id, medida.id)}
+                  >
+                    <Text style={styles.btnBorrarLadoText}>X</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
 
@@ -243,5 +267,8 @@ const styles = StyleSheet.create({
   graficoTriangulo: { width: 0, height: 0, backgroundColor: 'transparent', borderStyle: 'solid', borderLeftWidth: 0, borderRightWidth: 70, borderBottomWidth: 110, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: '#ff9800' },
   
   // Estilo del texto externo con alto contraste sobre la tarjeta blanca
-  textoGraficoFuera: { color: '#333333', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginLeft: 12 }
+  textoGraficoFuera: { color: '#333333', fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginLeft: 12 },
+  
+  btnBorrarLado: { backgroundColor: '#ffebee', width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  btnBorrarLadoText: { color: '#d32f2f', fontWeight: 'bold', fontSize: 14 }
 });

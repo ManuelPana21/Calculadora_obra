@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "calculadora-cielos",
-    "slug": "calculadora-cielos",
-    "version": "1.0.0",
+    "name": "Calculadora de obra",
+    "slug": "calculadora-de-obra",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/plan.png",
     "scheme": "calculadoracielos",
@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/plan.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.manuelpana10.calculadoracielos"
     },
     "web": {
       "output": "static",
@@ -42,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ecaf4f88-e725-4da4-ae65-0975899f260a"
+      }
     }
   }
 }

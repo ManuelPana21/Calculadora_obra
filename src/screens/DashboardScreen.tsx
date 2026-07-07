@@ -75,8 +75,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
 
   return (
     <View style={styles.container}>
-      
-      // FlatList optimiza la carga en pantalla de listas grandes
+      {/* FlatList optimiza la carga en pantalla de listas grandes */}
       <FlatList
         data={planos}
         keyExtractor={(item) => item.id}
@@ -85,7 +84,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
         contentContainerStyle={styles.listContent}
       />
 
-      // Boton flotante de accion principal
+      {/* Boton flotante de accion principal */}
       <TouchableOpacity style={styles.fab} onPress={crearNuevoPlano}>
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>

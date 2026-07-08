@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Switch } from 'react-native';
 
 const TIPOS_VARILLA = [
   { id: 'v3/8', nombre: '3/8 in (9.53 mm) N° 3', grados: ['Grado 40', 'Grado 60'] },
@@ -40,6 +40,21 @@ export default function EditorMurosScreen() {
   const [varillaSeleccionada, setVarillaSeleccionada] = useState(TIPOS_VARILLA[0]);
   const [gradoSeleccionado, setGradoSeleccionado] = useState(TIPOS_VARILLA[0].grados[0]);
 
+  // Estado que define si se incluyen soleras de refuerzo intermedias
+  const [incluyeSoleras, setIncluyeSoleras] = useState(false);
+
+  // Estado para la separacion vertical de las soleras en metros
+  const [separacionSoleras, setSeparacionSoleras] = useState('1.20');
+
+  // Estado para la seccion transversal de la solera en metros
+  const [seccionSolera, setSeccionSolera] = useState('0.15');
+
+  // Calibre del acero longitudinal de la solera
+  const [calibreLongitudinal, setCalibreLongitudinal] = useState('3');
+
+  // Calibre de los estribos de la solera
+  const [calibreEstribos, setCalibreEstribos] = useState('2');
+
   // Estado para ventanas y puertas
   const [vanos, setVanos] = useState<Vano[]>([]);
 
@@ -70,7 +85,26 @@ export default function EditorMurosScreen() {
     }
     
     if (parsedParams.grado) setGradoSeleccionado(parsedParams.grado as string);
+
+    // Recupera la configuracion de las soleras intermedias
+    if (parsedParams.incluyeSoleras !== undefined) {
+      setIncluyeSoleras(parsedParams.incluyeSoleras === 'true' || parsedParams.incluyeSoleras === true);
+    }
+    if (parsedParams.separacionSoleras) setSeparacionSoleras(parsedParams.separacionSoleras as string);
+    if (parsedParams.seccionSolera) setSeccionSolera(parsedParams.seccionSolera as string);
+    if (parsedParams.calibreLongitudinal) setCalibreLongitudinal(parsedParams.calibreLongitudinal as string);
+    if (parsedParams.calibreEstribos) setCalibreEstribos(parsedParams.calibreEstribos as string);
   }, [paramsString]);
+
+  // Activa automaticamente incluyeSoleras si es Ladrillo Rojo y el alto supera 1.50m
+  useEffect(() => {
+    if (material.includes('Ladrillo Rojo')) {
+      const altoNum = parseFloat(alto);
+      if (!isNaN(altoNum) && altoNum > 1.50) {
+        setIncluyeSoleras(true);
+      }
+    }
+  }, [alto, material]);
 
   // Agrega un hueco vacio a la lista de vanos
   const agregarVano = () => {
@@ -118,7 +152,13 @@ export default function EditorMurosScreen() {
         grado: gradoSeleccionado,
         vanos: JSON.stringify(vanos),
         proyectoId: params.proyectoId,
-        calculoId: params.calculoId 
+        calculoId: params.calculoId,
+        // Envia los parametros de las soleras de refuerzo
+        incluyeSoleras: incluyeSoleras ? 'true' : 'false',
+        separacionSoleras,
+        seccionSolera,
+        calibreLongitudinal,
+        calibreEstribos
       }
     });
   };
@@ -164,8 +204,12 @@ export default function EditorMurosScreen() {
             <Text style={styles.selectorText}>{material}</Text>
           </TouchableOpacity>
 
-          <Text style={styles.label}>Separación Varilla Vertical (cm):</Text>
-          <TextInput style={styles.input} value={separacionVarilla} onChangeText={setSeparacionVarilla} keyboardType="numeric" />
+          {!material.includes('Ladrillo Rojo') && (
+            <>
+              <Text style={styles.label}>Separación Varilla Vertical (cm):</Text>
+              <TextInput style={styles.input} value={separacionVarilla} onChangeText={setSeparacionVarilla} keyboardType="numeric" />
+            </>
+          )}
 
           <Text style={styles.label}>Grosor de Varilla:</Text>
           <TouchableOpacity style={styles.selectorBtn} onPress={() => setModalVarillaVisible(true)}>
@@ -176,6 +220,68 @@ export default function EditorMurosScreen() {
           <TouchableOpacity style={styles.selectorBtn} onPress={() => setModalGradoVisible(true)}>
             <Text style={styles.selectorText}>{gradoSeleccionado}</Text>
           </TouchableOpacity>
+
+          {material.includes('Ladrillo Rojo') && (
+            <View style={styles.solerasContainer}>
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>Incluir soleras horizontales</Text>
+                <Switch
+                  value={incluyeSoleras}
+                  onValueChange={setIncluyeSoleras}
+                  trackColor={{ false: '#767577', true: '#81b0ff' }}
+                  thumbColor={incluyeSoleras ? '#f5dd4b' : '#f4f3f4'}
+                />
+              </View>
+              {incluyeSoleras && (
+                <>
+                  <View style={styles.row}>
+                    <View style={styles.col}>
+                      <Text style={styles.label}>Separación vertical (m):</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={separacionSoleras}
+                        onChangeText={setSeparacionSoleras}
+                        keyboardType="numeric"
+                        placeholder="1.20"
+                      />
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={styles.label}>Sección transversal (m):</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={seccionSolera}
+                        onChangeText={setSeccionSolera}
+                        keyboardType="numeric"
+                        placeholder="0.15"
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.row}>
+                    <View style={styles.col}>
+                      <Text style={styles.label}>Calibre longitudinal (N°):</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={calibreLongitudinal}
+                        onChangeText={setCalibreLongitudinal}
+                        keyboardType="numeric"
+                        placeholder="3"
+                      />
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={styles.label}>Calibre estribos (N°):</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={calibreEstribos}
+                        onChangeText={setCalibreEstribos}
+                        keyboardType="numeric"
+                        placeholder="2"
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.card}>
@@ -295,5 +401,7 @@ const styles = StyleSheet.create({
   modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#eee' },
   modalItemText: { fontSize: 16, textAlign: 'center', color: '#333' },
   btnCerrarModal: { marginTop: 16, padding: 12, backgroundColor: '#f44336', borderRadius: 6 },
-  btnCerrarModalText: { color: '#fff', textAlign: 'center', fontWeight: 'bold', fontSize: 16 }
+  btnCerrarModalText: { color: '#fff', textAlign: 'center', fontWeight: 'bold', fontSize: 16 },
+  solerasContainer: { marginTop: 12, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 8 },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8 }
 });

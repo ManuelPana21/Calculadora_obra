@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Calculadora de obra",
-    "slug": "calculadora-de-obra",
+    "slug": "calculadora-cielos",
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/plan.png",
@@ -49,6 +49,7 @@
       "eas": {
         "projectId": "ecaf4f88-e725-4da4-ae65-0975899f260a"
       }
-    }
+    },
+    "owner": "manuelpana10"
   }
 }

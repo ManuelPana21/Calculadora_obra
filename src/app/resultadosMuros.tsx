@@ -24,6 +24,15 @@ export default function ResultadosMurosScreen() {
   const grado = params.grado as string;
   const vanos: Vano[] = params.vanos ? JSON.parse(params.vanos as string) : [];
 
+  // Parsea e inicializa los parametros de soleras intermedias
+  const incluyeSoleras = params.incluyeSoleras === 'true';
+  const separacionSoleras = parseFloat(params.separacionSoleras as string) || 1.20;
+  const seccionSolera = parseFloat(params.seccionSolera as string) || 0.15;
+
+  // Obtiene los calibres longitudinales y de estribos elegidos
+  const calibreLongitudinal = (params.calibreLongitudinal as string) || '3';
+  const calibreEstribos = (params.calibreEstribos as string) || '2';
+
   // Logica matematica para areas y descuentos
   const areaTotalBruta = largo * alto;
   
@@ -35,12 +44,32 @@ export default function ResultadosMurosScreen() {
 
   const areaNeta = areaTotalBruta - areaVanos;
 
+  // Calculos especificos para soleras horizontales intermedias
+  let cantidadSoleras = 0;
+  let areaSoleras = 0;
+  let volumenConcretoSoleras = 0;
+  let aceroLongitudinal = 0;
+  let aceroEstribos = 0;
+
+  if (incluyeSoleras) {
+    cantidadSoleras = Math.floor(alto / separacionSoleras);
+    areaSoleras = largo * seccionSolera * cantidadSoleras;
+    volumenConcretoSoleras = largo * seccionSolera * seccionSolera * cantidadSoleras;
+    aceroLongitudinal = 4 * largo * cantidadSoleras;
+    const cantidadAnillos = (largo / 0.15) * cantidadSoleras;
+    const longitudAnillo = (seccionSolera * 4) - 0.10;
+    aceroEstribos = cantidadAnillos * longitudAnillo;
+  }
+
+  // Resta el area de las soleras al area neta antes de dividir por el area del bloque
+  const areaNetaMamposteria = incluyeSoleras ? (areaNeta - areaSoleras) : areaNeta;
+
   let areaBloque = 0.08; 
   if (material.includes('Ladrillo Rojo')) {
     areaBloque = 0.0196;
   }
 
-  const bloquesNetos = areaNeta / areaBloque;
+  const bloquesNetos = areaNetaMamposteria / areaBloque;
   const bloquesConDesperdicio = Math.ceil(bloquesNetos * (1 + (desperdicio / 100)));
 
   const hiladas = Math.ceil(alto / 0.20);
@@ -51,7 +80,7 @@ export default function ResultadosMurosScreen() {
 
   // Funcion nativa para compartir el reporte en texto plano
   const compartirReporte = async () => {
-    const reporte = `
+    let reporte = `
 Detalle de Obra: ${nombreMuro}
 --------------------------------
 Medidas: ${largo}m x ${alto}m
@@ -64,12 +93,21 @@ Materiales Necesarios:
 - Cantidad total (con ${desperdicio}% desperdicio): ${bloquesConDesperdicio} unidades
 - Medios bloques estimados para remates: ${mediosBloquesEstimados} unidades
 
-Varilla de acero de Refuerzo Vertical:
+${material.includes('Ladrillo Rojo') ? 'Varilla de acero de Refuerzo Horizontal' : 'Varilla de acero de Refuerzo Vertical'}:
 - Separación: cada ${separacionVarilla} cm
 - Varilla: ${varillaNombre} (${grado})
 - Cantidad estimada: ${cantidadVarillas} varillas
+`;
 
-    `;
+    if (incluyeSoleras) {
+      reporte += `
+Refuerzo de Soleras Intermedias:
+- Cantidad de soleras: ${cantidadSoleras}
+- Volumen de concreto: ${volumenConcretoSoleras.toFixed(3)} m³
+- Acero longitudinal (Varilla N°${calibreLongitudinal}): ${aceroLongitudinal.toFixed(2)} m
+- Estribos (Varilla N°${calibreEstribos}): ${aceroEstribos.toFixed(2)} m
+`;
+    }
 
     try {
       await Share.share({
@@ -153,7 +191,7 @@ Varilla de acero de Refuerzo Vertical:
         </View>
 
         <View style={styles.resultCard}>
-          <Text style={styles.sectionTitle}>Refuerzo Vertical</Text>
+          <Text style={styles.sectionTitle}>{material.includes('Ladrillo Rojo') ? 'Refuerzo Horizontal' : 'Refuerzo Vertical'}</Text>
           <View style={styles.dataRow}>
             <Text style={styles.dataLabel}>Tipo de varilla:</Text>
             <Text style={styles.dataValue}>{varillaNombre}</Text>
@@ -167,6 +205,28 @@ Varilla de acero de Refuerzo Vertical:
             <Text style={styles.dataValueHighlight}>{cantidadVarillas} unds</Text>
           </View>
         </View>
+
+        {incluyeSoleras && (
+          <View style={styles.resultCard}>
+            <Text style={styles.sectionTitle}>Soleras de Refuerzo</Text>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Cantidad de soleras:</Text>
+              <Text style={styles.dataValue}>{cantidadSoleras} unds</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Volumen de concreto:</Text>
+              <Text style={styles.dataValueHighlight}>{volumenConcretoSoleras.toFixed(3)} m³</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Varilla longitudinal N°{calibreLongitudinal}:</Text>
+              <Text style={styles.dataValueHighlight}>{aceroLongitudinal.toFixed(2)} m</Text>
+            </View>
+            <View style={styles.dataRow}>
+              <Text style={styles.dataLabel}>Estribos N°{calibreEstribos}:</Text>
+              <Text style={styles.dataValueHighlight}>{aceroEstribos.toFixed(2)} m</Text>
+            </View>
+          </View>
+        )}
 
       </ScrollView>
 
